@@ -28,5 +28,18 @@ structs of predefined type, independant of use on either end.*/
 
 void main()
 {
-  remote_socket_server_init();
+  int valread;
+  int connected_sock;
+  int port1 = 8090;
+
+  char rec_message[256];
+  char test_message[256] = "Stuff and things are awesome!";
+
+  connected_sock = remote_socket_server_init(port1);
+  valread = read(connected_sock,rec_message, 256);
+  printf("message received from client: %s",rec_message);
+
+  send(connected_sock, test_message, 256,0);
+  printf("Message sent s / c\n");
+  shutdown(connected_sock,3);
 }

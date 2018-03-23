@@ -31,7 +31,7 @@
  *@return VOID
  */
 
-void remote_socket_server_init();
+int remote_socket_server_init(int port);
 
 #endif /*__server_socket_h_*/
 

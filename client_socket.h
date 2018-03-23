@@ -31,7 +31,7 @@
  *@return VOID
  */
 
-void client_socket_init();
+int client_socket_init(int port);
 #endif /*__server_socket_h_*/
 
 

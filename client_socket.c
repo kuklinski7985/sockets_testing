@@ -25,11 +25,11 @@
 
 #include "client_socket.h"
 
-#define PORT 8090
+//#define PORT 8090
 
 
 //add input variables to init IP address and port, return value of sock_handle, and move send/receving messages initializers to another function
-void client_socket_init()
+int client_socket_init(int port)
 {
   struct sockaddr_in sock_addr;    //struct that contains the port and Ip addr
   int sock_handle;                 //assigned socket tracking value
@@ -45,7 +45,7 @@ void client_socket_init()
     }
 
   sock_addr.sin_family = AF_INET;
-  sock_addr.sin_port = htons(PORT);
+  sock_addr.sin_port = htons(port);
 
   if(inet_pton(AF_INET, "127.0.0.1", &sock_addr.sin_addr)<=0)
     {
@@ -56,9 +56,12 @@ void client_socket_init()
     {
       printf("connection to server FAILED!\n");
     }
+  
+  return sock_handle;
+}
 
-  send(sock_handle, send_message, 256,0);
+  /*send(sock_handle, send_message, 256,0);
 
   valread = read(sock_handle, rec_message, 256);
   printf("Message Received from Server: %s\n",rec_message);
-}
+}*/

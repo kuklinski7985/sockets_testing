@@ -14,19 +14,15 @@
 
 #include "server_socket.h"
 
-#define MYPORT 8090
+//#define MYPORT 8090
 
-void remote_socket_server_init()
+int remote_socket_server_init(int port)
 {
   struct sockaddr_in addr;
   int opt = 1;
   int addrlen = sizeof(addr);
   int sock_handle;      //creates and initializes the server side socket
   int connected_sock;   //fd for newly connected socket, available for transfer
-  int valread;
-
-  char rec_message[256];
-  char test_message[256] = "Stuff and things are awesome!";
 
   printf("Server Initialization Starting\n");
   
@@ -42,7 +38,7 @@ void remote_socket_server_init()
 
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons(MYPORT);
+  addr.sin_port = htons(port);
 
   if(bind(sock_handle, (struct sockaddr*)&addr,sizeof(addr))<0)
     {
@@ -53,16 +49,9 @@ void remote_socket_server_init()
   printf("Listening mode for server\n");
   listen(sock_handle,5);
 
-//might have to add while loop where 
   if((connected_sock = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
     {
       printf("Accept failure\n");
     }
-
-  valread = read(connected_sock,rec_message, 256);//strlen(rec_message));
-  printf("message received from client: %s",rec_message);
-
-  send(connected_sock, test_message, 256,0);
-  printf("Message sent s / c\n");
-  shutdown(connected_sock,3);
+  return connected_sock;
 }
