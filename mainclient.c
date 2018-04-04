@@ -33,12 +33,29 @@ void main()
   int port1 = 8090;
 
   char rec_message[256];
-  char send_message[256] = "MESSGAES! to server from client!\n";
+  //char send_message[256] = "Client to Server: This is secret!\n";
   
+  struct_mess_t server_message;
+
+
+  struct_mess_t new_message;
+  strcpy(new_message.message, "shit be cray!");
+  new_message.float_val = 90.345355;
+  new_message.int_val = 321;
   sock_handle = client_socket_init(port1);
 
-  send(sock_handle, send_message, 256,0);
+  //send(sock_handle, send_message, 256,0);
+  send(sock_handle, &new_message, sizeof(new_message),0);
+
 
   valread = read(sock_handle, rec_message, 256);
-  printf("Message Received from Server: %s\n",rec_message);
+  printf("%s\n",rec_message);
+  valread = read(sock_handle, &server_message,sizeof(server_message));
+
+  printf("%s\n",server_message.message);
+  printf("%f\n",server_message.float_val);
+  printf("%d\n",server_message.int_val);
+
+
+
 }

@@ -32,6 +32,13 @@
  */
 
 int client_socket_init(int port);
+
+typedef struct struct_mess{
+    char message[256];
+    float float_val;
+    int int_val;
+}struct_mess_t;
+
 #endif /*__server_socket_h_*/
 
 
