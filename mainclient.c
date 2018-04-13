@@ -44,7 +44,6 @@ void main()
   new_message.int_val = 321;
   sock_handle = client_socket_init(port1);
 
-  //send(sock_handle, send_message, 256,0);
   send(sock_handle, &new_message, sizeof(new_message),0);
 
 
