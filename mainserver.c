@@ -38,18 +38,15 @@ int main(int argc, char const *argv[])
   int new_request_connection;  //fd for newly connected socket, available for transfer
   int port1 = 8090;     
   int i;
-
-   
   int new_activity;   //value of ready descriptors that select returns
-
   int connected_clients_fd[MAX_NUM_CLIENTS];
-
   struct sockaddr_in addr;
   int opt = 1;
   int addrlen = sizeof(addr);
   fd_set readfds;
+  char send_mess[256];
+  char recv_message[256];
   
-
   printf("Server Initialization Starting\n");
   
   //socket returns file descriptor for the new socket, -1 error
@@ -77,23 +74,101 @@ int main(int argc, char const *argv[])
   printf("Listening mode for server\n");
   listen(sock_handle,5);
 
+  //adds the main socket descriptor to the watch list
+  FD_SET(sock_handle, &readfds);
+
+  while(1)
+  {
+    //new_activity = select(MAX_NUM_CLIENTS+1, &readfds, NULL, NULL, NULL);
+    //printf("New activity %d\n",new_activity);
+    //printf("ERROR: %s\n", strerror(errno));
+
+    //checks to see if there is a client asking for a connection
+    if(FD_ISSET(sock_handle,&readfds))
+    {
+      if((new_request_connection = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
+      {
+        printf("new connection failed");
+      }
+      printf("Accepted Connection: socket | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
+
+      for(i=0; i<MAX_NUM_CLIENTS;i++)
+      {
+        if(connected_clients_fd[i]==0)
+        {
+          connected_clients_fd[i] = new_request_connection;
+          FD_SET(connected_clients_fd[i],&readfds);
+        }
+      }
+    }
+    //new_activity = select(MAX_NUM_CLIENTS+1, &readfds, NULL, NULL, NULL);
+    //printf("New activity %d\n",new_activity);
+    //printf("ERROR: %s\n", strerror(errno));
+  
+
+    for(i=0;i<MAX_NUM_CLIENTS;i++)
+    {
+      printf("server inside for %d",i);
+      if(FD_ISSET(connected_clients_fd[i],&readfds))
+      {
+        valread = read(connected_clients_fd[i],recv_message,256);
+        printf("%s\n",recv_message);
+        //recv_message[valread] = '\0';
+        //send(connected_clients_fd[i],recv_message,strlen(recv_message),0);
+      }
+      
+    }
+
+
+  } 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 //initializing connected clients array to zero
-/*for(i=0; i < MAX_NUM_CLIENTS; i++)
+for(i=0; i < MAX_NUM_CLIENTS; i++)
 {
   connected_clients_fd[i] = 0;
 
 }
-while(1)
-{
+
   //accept returns non- file descriptor for the accepted socket, -1 error
   //accept has been set up as non-blocking shoul only check the once and move on
   if((new_request_connection = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
   {
     printf("Accept failure\n");
   }
+  printf("Accepted Connection: socket | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
 
-  //printf("Accepted Connection: socket | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
 
+
+while(1)
+{
   //this will check if the new client request already exists in the array, add if not, and set
   for(i=0; i < MAX_NUM_CLIENTS; i++)
   {
@@ -118,7 +193,7 @@ while(1)
     }
   }
 
-}*/
+}
 
     if((new_request_connection = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
       {
@@ -147,4 +222,4 @@ while(1)
 }
     shutdown(new_request_connection,3);
   
-}
+}*/
