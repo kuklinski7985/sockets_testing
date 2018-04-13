@@ -42,7 +42,10 @@ void main()
   strcpy(new_message.message, "shit be cray!");
   new_message.float_val = 90.345355;
   new_message.int_val = 321;
+
   sock_handle = client_socket_init(port1);
+  for(int i=0; i<10;i++)
+  {
 
   send(sock_handle, &new_message, sizeof(new_message),0);
 
@@ -54,6 +57,9 @@ void main()
   printf("%s\n",server_message.message);
   printf("%f\n",server_message.float_val);
   printf("%d\n",server_message.int_val);
+  sleep(1);
+
+}
 
 
 
