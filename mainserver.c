@@ -46,6 +46,7 @@ int main(int argc, char const *argv[])
   fd_set readfds;
   char send_mess[256];
   char recv_message[256];
+  int current_fd;
   
   printf("Server Initialization Starting\n");
   
@@ -73,19 +74,22 @@ int main(int argc, char const *argv[])
 
   printf("Listening mode for server\n");
   listen(sock_handle,5);
+  //initializing connected clients array to zero
+  for(i=0; i < MAX_NUM_CLIENTS; i++)
+  {
+    connected_clients_fd[i] = 0;
+  }
 
   //adds the main socket descriptor to the watch list
+  printf("Socket handle fd %d\n",sock_handle);
   FD_SET(sock_handle, &readfds);
 
   while(1)
   {
-    //new_activity = select(MAX_NUM_CLIENTS+1, &readfds, NULL, NULL, NULL);
-    //printf("New activity %d\n",new_activity);
-    //printf("ERROR: %s\n", strerror(errno));
-
     //checks to see if there is a client asking for a connection
     if(FD_ISSET(sock_handle,&readfds))
     {
+      printf("just before accept\n");
       if((new_request_connection = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
       {
         printf("new connection failed");
@@ -94,30 +98,39 @@ int main(int argc, char const *argv[])
 
       for(i=0; i<MAX_NUM_CLIENTS;i++)
       {
-        if(connected_clients_fd[i]==0)
+        current_fd = connected_clients_fd[i];
+        //i think this needs to be a while loop that chooses the first zero position and then exits
+        if((connected_clients_fd[i] == 0) && (connected_clients_fd[i] != connected_clients_fd[i-1]))
         {
           connected_clients_fd[i] = new_request_connection;
-          FD_SET(connected_clients_fd[i],&readfds);
+          //printf("connected_clients_fd %d\n",connected_clients_fd[i]);
+          //FD_SET(connected_clients_fd[i],&readfds);
+          FD_SET(current_fd, &readfds);
+          printf("fd added <postition:%i | value %d>\n",i ,connected_clients_fd[i]);
         }
+        
       }
     }
-    //new_activity = select(MAX_NUM_CLIENTS+1, &readfds, NULL, NULL, NULL);
-    //printf("New activity %d\n",new_activity);
-    //printf("ERROR: %s\n", strerror(errno));
-  
+    new_activity = select((MAX_NUM_CLIENTS+1), &readfds, NULL, NULL, NULL);
+    if((new_activity < 0) && (errno!=EINTR))
+    {
+      printf("New activity %d\n",new_activity);
+      printf("ERROR: %s\n", strerror(errno));
+    }
+    printf("new_activity: %d\n",new_activity);
 
     for(i=0;i<MAX_NUM_CLIENTS;i++)
     {
-      printf("server inside for %d",i);
+      //printf("server inside for %d",i);
       if(FD_ISSET(connected_clients_fd[i],&readfds))
       {
         valread = read(connected_clients_fd[i],recv_message,256);
-        printf("%s\n",recv_message);
+        printf("message from client: %s\n",recv_message);
         //recv_message[valread] = '\0';
         //send(connected_clients_fd[i],recv_message,strlen(recv_message),0);
       }
-      
     }
+    
 
 
   } 
