@@ -67,16 +67,16 @@ void main()
   new_message.float_val = 90.345355;
   new_message.int_val = 321;
 
-  while(counter1 < 4)
+  while(counter1 < 19)
   {
     //printf("client inside while %d\n",counter1);
-    sprintf(send_message, "client socket_handle: %d | Counter: %d\n",sock_handle, counter1);
+    sprintf(send_message, "client socket_handle: %d | Counter: %d",sock_handle, counter1);
     send(sock_handle, send_message, strlen(send_message),0);
     printf("message sent by client: %s\n",send_message);
     counter1++;
     //valread = read(sock_handle,recv_message,256);
     //printf("Echoed Back: %s\n",recv_message);
-    sleep(1);
+    usleep(100);
 
   }
 

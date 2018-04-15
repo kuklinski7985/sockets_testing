@@ -30,7 +30,8 @@ from the client*/
 both client and server should be able to send and receive
 structs of predefined type, independant of use on either end.*/
 
-#define MAX_NUM_CLIENTS  10
+#define MAX_NUM_CLIENTS  1024
+#define MAX_READ_BUFFER_SIZE 256
 int main(int argc, char const *argv[])
 {
   int valread;
@@ -44,9 +45,9 @@ int main(int argc, char const *argv[])
   int opt = 1;
   int addrlen = sizeof(addr);
   fd_set readfds;
-  char send_mess[256];
-  char recv_message[256];
-  int current_fd;
+  char send_mess[MAX_READ_BUFFER_SIZE];
+  char recv_message[MAX_READ_BUFFER_SIZE];
+  int flag = 0;
   
   printf("Server Initialization Starting\n");
   
@@ -81,22 +82,40 @@ int main(int argc, char const *argv[])
   }
 
   //adds the main socket descriptor to the watch list
-  printf("Socket handle fd %d\n",sock_handle);
-  FD_SET(sock_handle, &readfds);
+  printf("Socket Created using handle %d\n",sock_handle);
+  
 
   while(1)
   {
+    FD_ZERO(&readfds);
+    FD_SET(sock_handle, &readfds);
+
     //checks to see if there is a client asking for a connection
+
+    for(i=0;i<MAX_NUM_CLIENTS;i++)
+    {
+      if(connected_clients_fd[i] > 0)
+      {
+        FD_SET(connected_clients_fd[i], &readfds);
+      } 
+    }
+    printf("Waiting for new activity...\n");
+    new_activity = select((MAX_NUM_CLIENTS+1), &readfds, NULL, NULL, NULL);
+    if(new_activity < 0)
+    {
+      printf("Select Fxn ERROR: %s\n", strerror(errno));
+    }
+    
     if(FD_ISSET(sock_handle,&readfds))
     {
-      printf("just before accept\n");
+      printf("New activity detected on socket.\n");
       if((new_request_connection = accept(sock_handle, (struct sockaddr*) &addr, &addrlen)) <0)
       {
         printf("new connection failed");
       }
-      printf("Accepted Connection: socket | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
+      printf("New Connection Accepted: FD | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
 
-      for(i=0; i<MAX_NUM_CLIENTS;i++)
+      /*for(i=0; i<MAX_NUM_CLIENTS;i++)
       {
         current_fd = connected_clients_fd[i];
         //i think this needs to be a while loop that chooses the first zero position and then exits
@@ -109,15 +128,38 @@ int main(int argc, char const *argv[])
           printf("fd added <postition:%i | value %d>\n",i ,connected_clients_fd[i]);
         }
         
+      }*/
+      i = 0;
+      flag = 0;
+
+      while(flag==0)
+      {
+        if(connected_clients_fd[i]==0)
+        {
+          connected_clients_fd[i] = new_request_connection;
+          FD_SET(connected_clients_fd[i],&readfds);
+          printf("New client FD:%d has been added\n",connected_clients_fd[i]);
+          flag = 1;
+        }
+        else{
+          i++;
+        }
+        if(i==MAX_NUM_CLIENTS)
+        {
+          flag = 1;
+          printf("New client could not be added immediately\n");
+        }
       }
+      FD_CLR(sock_handle,&readfds);
     }
+    /*printf("Waiting for new activity...\n");
     new_activity = select((MAX_NUM_CLIENTS+1), &readfds, NULL, NULL, NULL);
-    if((new_activity < 0) && (errno!=EINTR))
+    if(new_activity < 0)
     {
       printf("New activity %d\n",new_activity);
-      printf("ERROR: %s\n", strerror(errno));
+      printf("Select Fxn ERROR: %s\n", strerror(errno));
     }
-    printf("new_activity: %d\n",new_activity);
+    printf("New activity detected!\n");*/
 
     for(i=0;i<MAX_NUM_CLIENTS;i++)
     {
@@ -125,14 +167,22 @@ int main(int argc, char const *argv[])
       if(FD_ISSET(connected_clients_fd[i],&readfds))
       {
         valread = read(connected_clients_fd[i],recv_message,256);
-        printf("message from client: %s\n",recv_message);
+        printf("message sent to server from client: %s\n",recv_message);
+
+        if(valread == 0)
+        {
+          close(connected_clients_fd[i]);
+          connected_clients_fd[i] = 0;
+          printf("Connection closed, %d\n",connected_clients_fd[i]);
+        }
         //recv_message[valread] = '\0';
         //send(connected_clients_fd[i],recv_message,strlen(recv_message),0);
       }
     }
-    
-
-
+    for(i=0;i<MAX_READ_BUFFER_SIZE;i++)
+    {
+      recv_message[i] = '\0';
+    }
   } 
 }
 
