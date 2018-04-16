@@ -11,24 +11,7 @@
 #include <netinet/in.h> 
 #include <sys/time.h>
 #include <arpa/inet.h>
-
 #include "server_socket.h"
-
-//server side
-/*create a init function that takes a port number and IP address
-and returns a socke handler identifier.  
-include functionality for errno and 
-main function should only be calling the init function and processing data 
-from the client*/
-
-
-//client side 
-
-/*mainclient.c will utilize the client socket library and struct definitions
-  to keep things independant*/
-/* stand alone program that sends requests to client
-both client and server should be able to send and receive
-structs of predefined type, independant of use on either end.*/
 
 #define MAX_NUM_CLIENTS  1024
 #define MAX_READ_BUFFER_SIZE 256
@@ -47,13 +30,18 @@ int main(int argc, char const *argv[])
   fd_set readfds;
   char send_mess[MAX_READ_BUFFER_SIZE];
   char recv_message[MAX_READ_BUFFER_SIZE];
+  //struct_mess_t recv_message;
   int flag = 0;
+
+  for(i=0;i<MAX_READ_BUFFER_SIZE;i++)
+  {
+    recv_message[i] = '\0';
+  }
   
   printf("Server Initialization Starting\n");
   
   //socket returns file descriptor for the new socket, -1 error
   if((sock_handle = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-  //if((sock_handle = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0)
   {
     printf("Socket Allocation Failed\n");
   }
@@ -75,6 +63,7 @@ int main(int argc, char const *argv[])
 
   printf("Listening mode for server\n");
   listen(sock_handle,5);
+
   //initializing connected clients array to zero
   for(i=0; i < MAX_NUM_CLIENTS; i++)
   {
@@ -84,19 +73,17 @@ int main(int argc, char const *argv[])
   //adds the main socket descriptor to the watch list
   printf("Socket Created using handle %d\n",sock_handle);
   
-
   while(1)
   {
     FD_ZERO(&readfds);
     FD_SET(sock_handle, &readfds);
-
-    //checks to see if there is a client asking for a connection
 
     for(i=0;i<MAX_NUM_CLIENTS;i++)
     {
       if(connected_clients_fd[i] > 0)
       {
         FD_SET(connected_clients_fd[i], &readfds);
+        printf("clients watching %d\n",connected_clients_fd[i]);
       } 
     }
     printf("Waiting for new activity...\n");
@@ -115,20 +102,6 @@ int main(int argc, char const *argv[])
       }
       printf("New Connection Accepted: FD | ip | port : %d | %s | %d\n",new_request_connection, inet_ntoa(addr.sin_addr),ntohs(addr.sin_port));
 
-      /*for(i=0; i<MAX_NUM_CLIENTS;i++)
-      {
-        current_fd = connected_clients_fd[i];
-        //i think this needs to be a while loop that chooses the first zero position and then exits
-        if((connected_clients_fd[i] == 0) && (connected_clients_fd[i] != connected_clients_fd[i-1]))
-        {
-          connected_clients_fd[i] = new_request_connection;
-          //printf("connected_clients_fd %d\n",connected_clients_fd[i]);
-          //FD_SET(connected_clients_fd[i],&readfds);
-          FD_SET(current_fd, &readfds);
-          printf("fd added <postition:%i | value %d>\n",i ,connected_clients_fd[i]);
-        }
-        
-      }*/
       i = 0;
       flag = 0;
 
@@ -152,22 +125,17 @@ int main(int argc, char const *argv[])
       }
       FD_CLR(sock_handle,&readfds);
     }
-    /*printf("Waiting for new activity...\n");
-    new_activity = select((MAX_NUM_CLIENTS+1), &readfds, NULL, NULL, NULL);
-    if(new_activity < 0)
-    {
-      printf("New activity %d\n",new_activity);
-      printf("Select Fxn ERROR: %s\n", strerror(errno));
-    }
-    printf("New activity detected!\n");*/
 
     for(i=0;i<MAX_NUM_CLIENTS;i++)
     {
-      //printf("server inside for %d",i);
       if(FD_ISSET(connected_clients_fd[i],&readfds))
       {
         valread = read(connected_clients_fd[i],recv_message,256);
         printf("message sent to server from client: %s\n",recv_message);
+        //valread = read(new_request_connection,&recv_message, sizeof(recv_message));
+        //printf("%s\n",recv_message.message);
+        //printf("%f\n",recv_message.float_val);
+        //printf("%d\n",recv_message.int_val);
 
         if(valread == 0)
         {

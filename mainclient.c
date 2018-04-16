@@ -30,12 +30,12 @@ from the client*/
 both client and server should be able to send and receive
 structs of predefined type, independant of use on either end.*/
 
-void main()
+int main(int argc, char const *argv[])
 {
   int port1 = 8090;
 
   char recv_message[256] = {0};
-  char send_message[256] = "Ground Control to Major Tom";
+  char send_message[256] = {0};
   static int counter1 = 0;
   
   struct_mess_t server_message;
@@ -52,7 +52,8 @@ void main()
   sock_addr.sin_family = AF_INET;
   sock_addr.sin_port = htons(port1);
 
-  if(inet_pton(AF_INET, "127.0.0.1", &sock_addr.sin_addr)<=0)
+  //if(inet_pton(AF_INET, "127.0.0.1", &sock_addr.sin_addr)<=0)
+  if(inet_pton(AF_INET, argv[1], &sock_addr.sin_addr)<=0)
     {
       printf("Invalid Address\n");
     }
@@ -62,21 +63,26 @@ void main()
       printf("connection to server FAILED!\n");
     }
 
-  struct_mess_t new_message;
-  strcpy(new_message.message, "shit be cray!");
-  new_message.float_val = 90.345355;
-  new_message.int_val = 321;
+  //struct_mess_t client_message1;
+  //strcpy(client_message1.message, "Message from client");
+  //strcpy(client_message1.message, argv[2]);
+  //client_message1.float_val = 90.345355;
+  
 
-  while(counter1 < 19)
+  while(counter1 < 20)
   {
     //printf("client inside while %d\n",counter1);
-    sprintf(send_message, "client socket_handle: %d | Counter: %d",sock_handle, counter1);
+    sprintf(send_message, "Client Name: %s FD: %d | Counter: %d",argv[2],sock_handle, counter1);
     send(sock_handle, send_message, strlen(send_message),0);
-    printf("message sent by client: %s\n",send_message);
+    //printf("message sent by client: %s\n",send_message);
+    //client_message1.int_val = counter1;
+    //send(sock_handle, &client_message1,sizeof(client_message1),0);
+
     counter1++;
     //valread = read(sock_handle,recv_message,256);
     //printf("Echoed Back: %s\n",recv_message);
-    usleep(100);
+    //usleep(100);
+    sleep(2);
 
   }
 
